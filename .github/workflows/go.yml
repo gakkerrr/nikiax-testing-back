@@ -16,9 +16,8 @@ jobs:
       uses: appleboy/scp-action@master
       with:
           host: ${{ secrets.SSH_HOST }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
           username: ${{ secrets.SSH_USER }}
-          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          password: ${{ secrets.SSH_PASSWORD }}
           source: "./"
           target: "~/nikiax-testing-back"
 
@@ -26,9 +25,8 @@ jobs:
       uses: appleboy/ssh-action@v0.1.7
       with:
           host: ${{ secrets.SSH_HOST }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
           username: ${{ secrets.SSH_USER }}
-          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          password: ${{ secrets.SSH_PASSWORD }}
           script: |
             cd nikiax-testing-back
             make reload
