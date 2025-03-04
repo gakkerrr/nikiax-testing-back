@@ -1,6 +1,19 @@
-run:
-	docker run -d -p 3000:3000 -t nixian-back 
+up:
+	docker compose up -d
 
 build:
-	docker build -t nixian-back .
+	docker compose build
 
+down:
+	docker compose down
+
+reload:
+	docker compose down && \
+	docker compose up --build -d
+
+restart:
+	docker compose down && \
+	docker compose up -d
+
+launch:
+	docker compose up --build -d
