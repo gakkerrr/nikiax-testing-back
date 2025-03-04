@@ -1,0 +1,34 @@
+name: DEPLOY
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: login in server
+      uses: appleboy/scp-action@master
+      with:
+          host: ${{ secrets.SSH_HOST }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          username: ${{ secrets.SSH_USER }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          source: "./"
+          target: "~/nikiax-testing-back"
+
+    - name: launch back
+      uses: appleboy/ssh-action@v0.1.7
+      with:
+          host: ${{ secrets.SSH_HOST }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          username: ${{ secrets.SSH_USER }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          script: |
+            cd nikiax-testing-back
+            make reload
