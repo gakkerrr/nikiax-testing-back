@@ -12,8 +12,8 @@ services:
       interval: 5s
       timeout: 30s
       retries: 3
-    environment:
-      - POSTGRES_PASSWORD=OldDaddyBlues
+    env_file:
+      - .env
   back:
     build:
       dockerfile: ./dockerfile
@@ -27,10 +27,12 @@ services:
         condition: service_started
     networks:
       - local
+    env_file:
+      - .env
 
 volumes:
   postgresdata:
 
 networks:
   local:
-    driver: bridge 
+    driver: bridge
