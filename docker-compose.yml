@@ -13,11 +13,7 @@ services:
       timeout: 30s
       retries: 3
     environment:
-<<<<<<< HEAD
       - POSTGRES_PASSWORD=OldDaddyBlues
-=======
-      - POSTGRES_PASSWORD=CenalomLoh
->>>>>>> d48c29a (.)
   back:
     build:
       dockerfile: ./dockerfile
@@ -37,8 +33,4 @@ volumes:
 
 networks:
   local:
-<<<<<<< HEAD
-    driver: bridge
-=======
     driver: bridge 
->>>>>>> d48c29a (.)
