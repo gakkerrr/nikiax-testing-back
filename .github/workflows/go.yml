@@ -40,7 +40,5 @@ jobs:
           Commit message: ${{ github.event.commits[0].message }}
           
           Repository: ${{ github.repository }}
-          
-          Action has passed: $${{ github.action }} 
 
           See changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}
