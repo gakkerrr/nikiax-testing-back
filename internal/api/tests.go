@@ -3,13 +3,16 @@ package tests
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
 type Test struct {
-	id            int
-	name, alias   string
-	result, stage int
+	ID     int    `json:"id" db:"id"`
+	Name   string `json:"name" db:"name"`
+	Alias  string `json:"alias" db:"alias"`
+	Result int    `json:"result" db:"result"`
+	Stage  int    `json:"stage" db:"stage"`
 }
 
 func GetAllTests(db *sql.DB) http.HandlerFunc {
@@ -24,10 +27,12 @@ func GetAllTests(db *sql.DB) http.HandlerFunc {
 		var tests []Test
 		for rows.Next() {
 			var test Test
-			if err := rows.Scan(&test.id, &test.name, &test.alias, &test.result, &test.stage); err != nil {
+			if err := rows.Scan(&test.ID, &test.Name, &test.Alias, &test.Result, &test.Stage); err != nil {
+				log.Printf("Ошибка при сканировании строки: %v", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+			log.Printf("Сканированная строка: %+v", test) // Логируем каждую строку
 			tests = append(tests, test)
 		}
 
