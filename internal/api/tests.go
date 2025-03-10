@@ -24,7 +24,7 @@ func GetAllTests(db *sql.DB) http.HandlerFunc {
 		var tests []Test
 		for rows.Next() {
 			var test Test
-			if err := rows.Scan(&test.name, &test.alias, &test.result, &test.stage, &test.id); err != nil {
+			if err := rows.Scan(&test.id, &test.name, &test.alias, &test.result, &test.stage); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
