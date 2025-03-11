@@ -32,7 +32,7 @@ func GetAllTests(db *sql.DB) http.HandlerFunc {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			log.Printf("Сканированная строка: %+v", test) // Логируем каждую строку
+			log.Printf("Сканированная строка: %+v", test)
 			tests = append(tests, test)
 		}
 
