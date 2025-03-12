@@ -1,7 +1,9 @@
 package database
 
 import (
+	"context"
 	"fmt"
+	"log/slog"
 
 	"database/sql"
 
@@ -17,14 +19,19 @@ type dbConfig struct {
 	Password string `env:"POSTGRES_PASSWORD"`
 }
 
-func MustLoadDB() *sql.DB {
+func MustLoadDB(ctx context.Context) *sql.DB {
+
+	logger := ctx.Value("logger").(*slog.Logger)
 
 	var cfg dbConfig
 
 	err := cleanenv.ReadEnv(&cfg)
 	if err != nil {
+		logger.Error("Ошибка считывания переменных окружения", "error", err)
 		panic(err)
 	}
+
+	logger.Info("Данные для базы данных успешно считаны из переменных среды")
 
 	psqlInfo := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
@@ -35,15 +42,15 @@ func MustLoadDB() *sql.DB {
 		cfg.DbName,
 	)
 
-	fmt.Println(psqlInfo)
-
 	db, err := sql.Open(cfg.DbName, psqlInfo)
 	if err != nil {
+		logger.Error("Ошибка при подключении к базе данных", "error", err)
 		panic(err)
 	}
 
 	err = db.Ping()
 	if err != nil {
+		logger.Error("Ошибка при пинге базы данных", "error", err)
 		panic(err)
 	}
 

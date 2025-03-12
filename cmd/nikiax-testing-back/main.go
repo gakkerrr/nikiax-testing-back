@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
+	"log/slog"
 	"net/http"
 	tests "nikiax-testing-back/internal/api"
 	"nikiax-testing-back/internal/database"
+	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -12,7 +15,13 @@ import (
 
 func main() {
 
-	db := database.MustLoadDB()
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, "logger", logger)
+
+	db := database.MustLoadDB(ctx)
+	logger.Info("База данных успешно подключена")
 	defer db.Close()
 
 	r := chi.NewRouter()
@@ -28,7 +37,8 @@ func main() {
 		w.Write([]byte("Катя где фронт"))
 	})
 
-	r.Get("/tests", tests.GetAllTests(db))
+	r.Get("/tests", tests.GetAllTests(ctx, db))
 
+	logger.Info("Сервер успешно запущен")
 	http.ListenAndServe(":3000", r)
 }
