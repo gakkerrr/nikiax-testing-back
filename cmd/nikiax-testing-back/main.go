@@ -38,6 +38,7 @@ func main() {
 	})
 
 	r.Get("/tests", tests.GetAllTests(ctx, db))
+	r.Get("/tests/{id}", tests.GetTestId(ctx, db))
 
 	logger.Info("Сервер успешно запущен")
 	http.ListenAndServe(":3000", r)
