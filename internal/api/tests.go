@@ -11,11 +11,13 @@ import (
 )
 
 type Test struct {
-	ID     int    `json:"id" db:"id"`
-	Name   string `json:"name" db:"name"`
-	Alias  string `json:"alias" db:"alias"`
-	Result int    `json:"result" db:"result"`
-	Stage  int    `json:"stage" db:"stage"`
+	ID            int    `json:"id" db:"id"`
+	Name          string `json:"name" db:"name"`
+	Alias         string `json:"alias" db:"alias"`
+	Result        int    `json:"result" db:"result"`
+	Err_txt       string `json:"err_txt" db:"err_txt"`
+	Set           int    `json:"set" db:"set"`
+	Time_duration int    `json:"time_duration" db:"time_duration"`
 }
 
 func GetAllTests(ctx context.Context, db *sql.DB) http.HandlerFunc {
@@ -35,7 +37,7 @@ func GetAllTests(ctx context.Context, db *sql.DB) http.HandlerFunc {
 		var tests []Test
 		for rows.Next() {
 			var test Test
-			if err := rows.Scan(&test.ID, &test.Name, &test.Alias, &test.Result, &test.Stage); err != nil {
+			if err := rows.Scan(&test.ID, &test.Name, &test.Alias, &test.Result, &test.Err_txt, &test.Set, &test.Time_duration); err != nil {
 				logger.Error("Ошибка при сканировании строки в ручке tests", "error", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -83,7 +85,7 @@ func GetTestId(ctx context.Context, db *sql.DB) http.HandlerFunc {
 		var tests []Test
 		for rows.Next() {
 			var test Test
-			if err := rows.Scan(&test.ID, &test.Name, &test.Alias, &test.Result, &test.Stage); err != nil {
+			if err := rows.Scan(&test.ID, &test.Name, &test.Alias, &test.Result, &test.Err_txt, &test.Set, &test.Time_duration); err != nil {
 				logger.Error("Ошибка при сканировании строки в ручке tests/id", "error", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return

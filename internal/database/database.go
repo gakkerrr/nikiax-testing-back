@@ -54,6 +54,21 @@ func MustLoadDB(ctx context.Context) *sql.DB {
 		panic(err)
 	}
 
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS tests (
+					id SERIAL,
+					name VARCHAR(255),
+					alias VARCHAR(255),
+					result INT,
+					err_txt VARCHAR(255),
+					set INT, 
+					time_duration INT 
+					)`)
+
+	if err != nil {
+		logger.Error("Ошибка при добавлении тестовой таблицы", "error", err)
+		panic(err)
+	}
+
 	return db
 }
 
