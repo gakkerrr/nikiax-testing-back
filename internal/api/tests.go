@@ -125,15 +125,10 @@ func CreateTests(ctx context.Context, db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		logger.Info(fmt.Sprintf("Данные из payload добавления теста: %w", tests))
+		logger.Info(fmt.Sprintf("Данные из payload добавления теста: %+v", tests))
 
 		query := "SELECT MAX(id), MAX(set) FROM tests"
 		row := db.QueryRow(query)
-		if err != nil {
-			logger.Error("Ошибка получения данных из базы данных в ручке create_test", "query", query)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
 
 		var lastId int
 		var lastSet int
@@ -184,5 +179,32 @@ func CreateTests(ctx context.Context, db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+	}
+}
+
+func DelTestId(ctx context.Context, db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		logger := ctx.Value("logger").(*slog.Logger)
+
+		testId := chi.URLParam(r, "id")
+		logger.Info("Удаление теста " + testId + " из базы 	")
+
+		if testId == "" {
+			logger.Error("Не получилось получить параметр для ручки tests/{id}")
+			http.Error(w, http.StatusText(422), 422)
+			return
+		}
+
+		query := "DELETE FROM tests WHERE id = " + testId
+		rows, err := db.Query(query)
+		if err != nil {
+			logger.Error("Ошибка удаления данных из базы данных в ручке tests/id", "query", query)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer rows.Close()
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
 	}
 }

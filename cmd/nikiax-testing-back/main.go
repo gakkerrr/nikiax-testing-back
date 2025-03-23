@@ -39,6 +39,7 @@ func main() {
 
 	r.Get("/tests", tests.GetAllTests(ctx, db))
 	r.Get("/tests/{id}", tests.GetTestId(ctx, db))
+	r.Delete("/tests/{id}", tests.DelTestId(ctx, db))
 	r.Post("/create_tests", tests.CreateTests(ctx, db))
 
 	logger.Info("Сервер успешно запущен")
