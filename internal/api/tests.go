@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -110,27 +111,23 @@ func GetTestId(ctx context.Context, db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func CreateTest(ctx context.Context, db *sql.DB) http.HandlerFunc {
+func CreateTests(ctx context.Context, db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger := ctx.Value("logger").(*slog.Logger)
 
 		logger.Info("Добавление теста в базу данных")
 
-		var test Test
-		err := json.NewDecoder(r.Body).Decode(&test)
+		var tests []Test
+		err := json.NewDecoder(r.Body).Decode(&tests)
 		if err != nil {
 			logger.Error("Ошибка получения данных из payload")
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		if test.Name == "" {
-			logger.Error("Не найдено имя для теста в теле запроса")
-			http.Error(w, "Не найдено имя для теста в теле запроса", http.StatusBadRequest)
-			return
-		}
-		logger.Info(fmt.Sprintf("Данные из payload добавления теста: %w", test))
 
-		query := "SELECT MAX(id) FROM tests"
+		logger.Info(fmt.Sprintf("Данные из payload добавления теста: %w", tests))
+
+		query := "SELECT MAX(id), MAX(set) FROM tests"
 		row := db.QueryRow(query)
 		if err != nil {
 			logger.Error("Ошибка получения данных из базы данных в ручке create_test", "query", query)
@@ -139,38 +136,49 @@ func CreateTest(ctx context.Context, db *sql.DB) http.HandlerFunc {
 		}
 
 		var lastId int
-		if err := row.Scan(&lastId); err != nil {
+		var lastSet int
+		if err := row.Scan(&lastId, &lastSet); err != nil {
 			logger.Error("Ошибка при получении последнего айди теста в ручке create_test", "error", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		logger.Info("Последний айди в бд: " + strconv.Itoa(lastId))
 
-		nextId := lastId + 1
+		stmt := `INSERT INTO tests (id, name, alias, result, err_txt, set, time_duration) VALUES `
+		values := []interface{}{}
+		valuePlaceholders := []string{}
 
-		stmt := `INSERT INTO tests (id, name, alias, result, err_txt, set, time_duration)
-		VALUES($1, $2, $3, $4, $5, $6, $7)`
+		for i, test := range tests {
+			if test.Name == "" {
+				logger.Error("Не найдено имя для теста в теле запроса", "index", i)
+				http.Error(w, fmt.Sprintf("Не найдено имя для теста в теле запроса (индекс %d)", i), http.StatusBadRequest)
+				return
+			}
 
-		result, err := db.Exec(
-			stmt,
-			nextId,
-			test.Name,
-			test.Alias,
-			test.Result,
-			test.Err_txt,
-			test.Set,
-			test.Time_duration,
-		)
+			nextId := lastId + i + 1
+			nextSet := lastSet + 1
+			curLen := len(values)
+
+			valuePlaceholders = append(valuePlaceholders, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d)",
+				curLen+1, curLen+2, curLen+3, curLen+4, curLen+5, curLen+6, curLen+7))
+
+			values = append(values, nextId, test.Name, test.Alias, test.Result, test.Err_txt, nextSet, test.Time_duration)
+		}
+
+		stmt += strings.Join(valuePlaceholders, ", ")
+
+		_, err = db.Exec(stmt, values...)
 		if err != nil {
-			logger.Error("Ошибка при добавления теста в бд в ручке create_test", "error", err)
+			logger.Error("Ошибка при добавлении тестов в бд в ручке create_test", "error", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		logger.Info("Результат добавления теста в бд: ", "result", result)
+
+		logger.Info("Все тесты успешно добавлены в базу данных")
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(test); err != nil {
+		if err := json.NewEncoder(w).Encode(tests); err != nil {
 			logger.Error("Ошибка преобразования данных в json формат в ручке create_test")
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
